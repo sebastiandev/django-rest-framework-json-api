@@ -47,20 +47,34 @@ def get_resource_name(context):
     except AttributeError:
         try:
             serializer = view.get_serializer_class()
-            return get_resource_type_from_serializer(serializer)
+            resource_name = get_resource_name_from_serializer_or_model(serializer, view)
         except AttributeError:
-            try:
-                resource_name = get_resource_type_from_model(view.model)
-            except AttributeError:
-                resource_name = view.__class__.__name__
+            resource_name = get_resource_name_from_model_or_relationship(view)
 
-            if not isinstance(resource_name, six.string_types):
-                # The resource name is not a string - return as is
-                return resource_name
+    return resource_name
 
-            # the name was calculated automatically from the view > pluralize and format
-            resource_name = format_relation_name(resource_name)
 
+def get_resource_name_from_serializer_or_model(serializer, view):
+    try:
+        return get_resource_type_from_serializer(serializer)
+    except AttributeError:
+        resource_name = get_resource_name_from_model_or_relationship(view)
+
+    return resource_name
+
+
+def get_resource_name_from_model_or_relationship(view):
+    try:
+        resource_name = get_resource_type_from_model(view.model)
+    except AttributeError:
+        resource_name = view.__class__.__name__
+
+    if not isinstance(resource_name, six.string_types):
+        # The resource name is not a string - return as is
+        return resource_name
+
+    # the name was calculated automatically from the view > pluralize and format
+    resource_name = format_relation_name(resource_name)
     return resource_name
 
 
